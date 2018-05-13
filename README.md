@@ -6,7 +6,7 @@ A mini shell implemented in C, just implement the basic functions for now and I 
 
 ## Functions (TODO)
 
-1. ~~ input commands and execute ~~
+1. ~~input commands and execute~~
 2. Environment variables
 3. Up key and down key to search the commands history
 4. Signal, eg: Ctrl + C， Ctrl + D
