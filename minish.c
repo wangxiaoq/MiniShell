@@ -109,12 +109,12 @@ static void handle_cd_cmd(char *cmd, char *arg)
     if (arg == NULL) {
         ret = chdir(get_user_home());
         if (ret < 0) {
-            fprintf(stderr, "jsh: cd: %s: No such file or directory\n", get_user_home());
+            fprintf(stderr, "minish: cd: %s: No such file or directory\n", get_user_home());
         }
     } else {
         ret = chdir(arg);
         if (ret < 0) {
-            fprintf(stderr, "jsh: cd: %s: No such file or directory\n", arg);
+            fprintf(stderr, "minish: cd: %s: No such file or directory\n", arg);
         }
     }
 }
@@ -167,16 +167,16 @@ static void fork_and_exec_cmd(char *cmd, char *arg)
 
     ret = get_cmd_absolute_path(cmd, absolute_path);
     if (ret < 0) {
-        fprintf(stderr, "jsh: %s: command not found, get_cmd_absolute_path error\n", cmd);
+        fprintf(stderr, "minish: %s: command not found, get_cmd_absolute_path error\n", cmd);
         return;
     }
 
     if ((pid = fork()) < 0) {
-        fprintf(stderr, "jsh: %s: command not found, fork error\n", cmd);
+        fprintf(stderr, "minish: %s: command not found, fork error\n", cmd);
     } else if (pid > 0) {
         ret = waitpid(pid, &status, 0);
         if (ret < 0) {
-            fprintf(stderr, "jsh: %s: command not found, waitpid error\n", cmd);
+            fprintf(stderr, "minish: %s: command not found, waitpid error\n", cmd);
         }
     } else {
         if ((arg0 = strrchr(absolute_path, '/')) != NULL) {
@@ -187,7 +187,7 @@ static void fork_and_exec_cmd(char *cmd, char *arg)
 
         ret = execl(absolute_path, arg0, arg, (char *)NULL);
         if (ret < 0) {
-            fprintf(stderr, "jsh: %s: command not found, exec error, errno: %d\n", cmd, errno);
+            fprintf(stderr, "minish: %s: command not found, exec error, errno: %d\n", cmd, errno);
         }
         exit(0);
     }
