@@ -1,19 +1,20 @@
 # minish(Mini Shell)
 
-自己编写的一个mini shell，目前只实现了最基本的功能，其他功能会后续实现。
+[中文版](./README-cn.md)
 
-## minish要实现的功能
+A mini shell implemented in C, just implement the basic functions for now and I will continue to development.
 
-1. 解析命令行（实现）
-2. 执行命令（实现）
-3. 环境变量设置
-4. 上下键查阅历史命令
-5. 信号处理功能：Ctrl+C， Ctrl+D
-6. 实现管道功能“|”
-7. 实现重定向功能：“>”、“>>”、“<”、“<<”
-8. 后台执行命令
-9. shell程序解释功能（脚本支持）
-10. 命令执行后的返回值
-11. TAB键自动补齐功能
-12. 通配符支持
-13. 颜色支持
+## Functions (TODO)
+
+1. ~~ input commands and execute ~~
+2. Environment variables
+3. Up key and down key to search the commands history
+4. Signal, eg: Ctrl + C， Ctrl + D
+5. Pipe, "|"
+6. IO redirection, ">", ">>", "<", "2>&1"
+7. Commands run in background, eg: ./a.out &
+8. Shell interpreter
+9. The return value of a command, $?
+10. TAB key to complete the commands
+11. Wildcard character
+12. Color support
