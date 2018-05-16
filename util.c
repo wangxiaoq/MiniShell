@@ -1,8 +1,10 @@
 #include <pwd.h>
 #include <sys/types.h>
 #include <stdlib.h>
+#include <unistd.h>
 
-inline char *get_current_user(void)
+
+char *get_current_user(void)
 {
     struct passwd *pw = getpwuid(getuid());
     if (pw == NULL) {
@@ -12,7 +14,7 @@ inline char *get_current_user(void)
     }
 }
 
-inline char *get_user_home(void)
+char *get_user_home(void)
 {
     struct passwd *pw = getpwuid(getuid());
     if (pw == NULL) {
