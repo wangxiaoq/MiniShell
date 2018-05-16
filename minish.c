@@ -8,28 +8,11 @@
 #include <errno.h>
 #include <sys/stat.h>
 
-#define CMDLINE_MAXLENGTH 4096
-#define NAMELEN 512
+#include "util.h"
 
-static inline char *get_current_user(void)
-{
-    struct passwd *pw = getpwuid(getuid());
-    if (pw == NULL) {
-        return NULL;
-    } else {
-        return pw->pw_name;
-    }
-}
+#define MAX_ARGS 100
 
-static inline char *get_user_home(void)
-{
-    struct passwd *pw = getpwuid(getuid());
-    if (pw == NULL) {
-        return NULL;
-    } else {
-        return pw->pw_dir;
-    }
-}
+static int cmd_return_value = 0;
 
 static inline int print_prompt(void)
 {
@@ -49,19 +32,46 @@ static inline int print_prompt(void)
     return 0;
 }
 
+static void split_args(char *arg, char *parg[])
+{
+    int index = 1;
+    char *p = NULL;
+
+    if ((arg == NULL) || (*arg == 0)) {
+        parg[index] = NULL;
+        index++;
+        return ;
+    }
+
+    p = strsep(&arg, " ");
+    while (p) {
+        if (strlen(p) == 0) {
+            p = strsep(&arg, " ");
+            continue;
+        }
+        parg[index] = p;
+        index++;
+        if (index > MAX_ARGS - 1) {
+            break;
+        }
+        p = strsep(&arg, " ");
+    }
+    parg[index] = NULL;
+}
+
 /*
  * @cmd_str[in]
  * @cmd[out]: cmd string
  * @arg[out]: arg string
  * */
-static void pre_handle_cmd_str(char *cmd_str, char **pcmd, char **parg)
+static void pre_handle_cmd_str(char *cmd_str, char **pcmd, char *parg[])
 {
     char *cmd = NULL, *arg = NULL;
     int i = 0;
 
     if (strlen(cmd_str) == 0) {
         *pcmd = NULL;
-        *parg = NULL;
+        parg[0] = NULL;
         return;
     }
 
@@ -74,45 +84,34 @@ static void pre_handle_cmd_str(char *cmd_str, char **pcmd, char **parg)
     /* blank cmd */
     if (*cmd_str == 0) {
         *pcmd = NULL;
-        *parg = NULL;
+        parg[0] = NULL;
         return;
     }
 
     if ((arg = strchr(cmd_str, ' ')) == NULL) {
         cmd = cmd_str;
+        parg[1] = NULL;
     } else {
         cmd = cmd_str;
         *arg = '\0';
         arg++;
-        /* skip the space at beginning*/
-        for (; *arg == ' '; arg++);
-        if (*arg == 0) {
-            arg = NULL;
-        }
-
-        /* skip the space at end */
-        if (arg != NULL) {
-            for (i = strlen(arg) - 1; arg[i] == ' '; i--) {
-                arg[i] = 0;
-            }
-        }
     }
 
     *pcmd = cmd;
-    *parg = arg;
+     split_args(arg, parg);
 }
 
-static void handle_cd_cmd(char *cmd, char *arg)
+static void handle_cd_cmd(char *cmd, char *arg[])
 {
     int ret = 0;
 
-    if (arg == NULL) {
+    if (arg[1] == NULL) {
         ret = chdir(get_user_home());
         if (ret < 0) {
             fprintf(stderr, "minish: cd: %s: No such file or directory\n", get_user_home());
         }
     } else {
-        ret = chdir(arg);
+        ret = chdir(arg[1]);
         if (ret < 0) {
             fprintf(stderr, "minish: cd: %s: No such file or directory\n", arg);
         }
@@ -157,10 +156,9 @@ static int get_cmd_absolute_path(char *cmd, char *absolute_path)
     return -1;
 }
 
-static void fork_and_exec_cmd(char *cmd, char *arg)
+static void fork_and_exec_cmd(char *cmd, char *arg[])
 {
     pid_t pid = -1;
-    int status = 0;
     int ret = 0;
     char *arg0 = NULL;
     char absolute_path[NAMELEN] = {0};
@@ -168,13 +166,14 @@ static void fork_and_exec_cmd(char *cmd, char *arg)
     ret = get_cmd_absolute_path(cmd, absolute_path);
     if (ret < 0) {
         fprintf(stderr, "minish: %s: command not found, get_cmd_absolute_path error\n", cmd);
+        cmd_return_value = -127;
         return;
     }
 
     if ((pid = fork()) < 0) {
         fprintf(stderr, "minish: %s: command not found, fork error\n", cmd);
     } else if (pid > 0) {
-        ret = waitpid(pid, &status, 0);
+        ret = waitpid(pid, &cmd_return_value, 0);
         if (ret < 0) {
             fprintf(stderr, "minish: %s: command not found, waitpid error\n", cmd);
         }
@@ -184,8 +183,9 @@ static void fork_and_exec_cmd(char *cmd, char *arg)
         } else {
             arg0 = absolute_path;
         }
+        arg[0] = arg0;
 
-        ret = execl(absolute_path, arg0, arg, (char *)NULL);
+        ret = execv(absolute_path, arg);
         if (ret < 0) {
             fprintf(stderr, "minish: %s: command not found, exec error, errno: %d\n", cmd, errno);
         }
@@ -193,12 +193,30 @@ static void fork_and_exec_cmd(char *cmd, char *arg)
     }
 }
 
+static void handle_cmd_return_value(char *arg[], char *cmd_ret)
+{
+    int index = 1;
+    char *tmp = arg[index];
+
+    while (tmp) {
+        if (strcmp(tmp, "$?") == 0) {
+            arg[index] = cmd_ret;
+        }
+        index++;
+        tmp = arg[index];
+    }
+}
+
 static int exec_cmd(char *cmd_str)
 {
-    char *cmd = NULL, *arg = NULL;
+    char *cmd = NULL;
+    char *arg[MAX_ARGS];
     int ret = 0;
+    char cmd_ret[NAMELEN] = {0};
+    sprintf(cmd_ret, "%d", WEXITSTATUS(cmd_return_value));
 
-    pre_handle_cmd_str(cmd_str, &cmd, &arg);
+    pre_handle_cmd_str(cmd_str, &cmd, arg);
+    handle_cmd_return_value(arg, cmd_ret);
 
     if (cmd == NULL) {
         return 0;
