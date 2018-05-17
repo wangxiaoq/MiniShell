@@ -9,28 +9,11 @@
 #include <sys/stat.h>
 
 #include "util.h"
+#include "key-handler.h"
 
 #define MAX_ARGS 100
 
 static int cmd_return_value = 0;
-
-static inline int print_prompt(void)
-{
-    char prompt[NAMELEN] = {0};
-    char hostname[NAMELEN] = {0};
-    char current_dir[NAMELEN] = {0};
-    int ret = 0;
-
-    char *user = get_current_user();
-    ret = gethostname(hostname, CMDLINE_MAXLENGTH);
-    if (ret < 0) {
-        memset(hostname, 0, CMDLINE_MAXLENGTH);
-    }
-    sprintf(prompt, "%s@%s:%s%s ", user, hostname, getcwd(current_dir, NAMELEN), !strcmp(user, "root") ? "#" : "$");
-    fprintf(stdout, prompt);
-
-    return 0;
-}
 
 static void split_args(char *arg, char *parg[])
 {
@@ -113,7 +96,7 @@ static void handle_cd_cmd(char *cmd, char *arg[])
     } else {
         ret = chdir(arg[1]);
         if (ret < 0) {
-            fprintf(stderr, "minish: cd: %s: No such file or directory\n", arg);
+            fprintf(stderr, "minish: cd: %s: No such file or directory\n", arg[1]);
         }
     }
 }
@@ -233,20 +216,36 @@ static int exec_cmd(char *cmd_str)
 
 static int start_minish(void)
 {
-    char cmd_str[CMDLINE_MAXLENGTH] = {0};
     int ret = 0;
+    char cmd_str[CMDLINE_MAXLENGTH] = {0};
 
     do {
         ret = exec_cmd(cmd_str);
 
         print_prompt();
-    } while ((fgets(cmd_str, CMDLINE_MAXLENGTH, stdin)) != NULL);
+    } while (myread(cmd_str, CMDLINE_MAXLENGTH) >= 0);
 
     return 0;
 }
 
 int main(int argc, char *argv[])
 {
+    int ret = init_signal_handler();
+    if (ret < 0) {
+        return -1;
+    }
+
+    ret = init_history_cmd();
+    if (ret < 0) {
+        return -1;
+    }
+
     start_minish();
+
+    ret = destroy_history_cmd();
+    if (ret < 0) {
+        return -1;
+    }
+
     return 0;
 }
