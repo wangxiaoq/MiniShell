@@ -10,6 +10,8 @@
 
 #include "util.h"
 #include "key-handler.h"
+#include "history-cmd.h"
+#include "signal-handler.h"
 
 #define MAX_ARGS 100
 
