@@ -195,7 +195,7 @@ static void handle_cmd_return_value(char *arg[], char *cmd_ret)
 static int exec_cmd(char *cmd_str)
 {
     char *cmd = NULL;
-    char *arg[MAX_ARGS];
+    char *arg[MAX_ARGS] = {0};
     int ret = 0;
     char cmd_ret[NAMELEN] = {0};
     sprintf(cmd_ret, "%d", WEXITSTATUS(cmd_return_value));
