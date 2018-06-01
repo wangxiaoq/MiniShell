@@ -8,6 +8,83 @@
 #include "history-cmd.h"
 #include "util.h"
 
+/* handle up arrow key */
+static char *handle_up_key(char *buf, int buf_max_len)
+{
+    int len = 0;
+    char *cmd = NULL;
+    int i = 0;
+
+    len = strlen(buf);
+    memset(buf, 0, buf_max_len);
+    cmd = up_cmd_item();
+    if (cmd != NULL) {
+        strcpy(buf, cmd);
+    }
+    print_prompt();
+    fflush(stdout);
+    for (i = 0; i < len; i++) {
+        printf(" ");
+        fflush(stdout);
+    }
+    print_prompt();
+    fprintf(stdout, "%s", buf);
+    fflush(stdout);
+
+    return cmd;
+}
+
+/* handle down arrow key */
+char *handle_down_key(char *buf, char *cur_cmd, int buf_max_len)
+{
+    int len = 0;
+    char *cmd = NULL;
+    int i = 0;
+
+    len = strlen(buf);
+    memset(buf, 0, buf_max_len);
+    cmd = down_cmd_item();
+    if (cmd != NULL) {
+        strcpy(buf, cmd);
+    } else {
+        strcpy(buf, cur_cmd);
+    }
+    print_prompt();
+    fflush(stdout);
+    for (i = 0; i < len; i++) {
+        printf(" ");
+        fflush(stdout);
+    }
+    print_prompt();
+    fflush(stdout);
+    fprintf(stdout, "%s", buf);
+    fflush(stdout);
+
+    return cmd;
+}
+
+/* handle delete key */
+void handle_delete_key(char *buf, int buf_max_len)
+{
+    int len = 0;
+    int i = 0;
+
+    len = strlen(buf);
+    if (len == 0) {
+        return ;
+    }
+    buf[len-1] = '\0';
+    len--;
+    print_prompt();
+    for (i = 0; i < len + 1; i++) {
+        printf(" ");
+    }
+    print_prompt();
+    fprintf(stdout, "%s", buf);
+
+    return ;
+}
+
 /*
  * myread: handle all keys from keyboard input.
  *
@@ -42,56 +119,14 @@ int myread(char *buf, int buf_max_len)
             ch = getchar();
             /* up key */
             if (ch == 65) {
-                len = strlen(buf);
-                memset(buf, 0, buf_max_len);
-                cmd = up_cmd_item();
-                if (cmd != NULL) {
-                    strcpy(buf, cmd);
-                }
-                print_prompt();
-                fflush(stdout);
-                for (i = 0; i < len; i++) {
-                    printf(" ");
-                    fflush(stdout);
-                }
-                print_prompt();
-                fprintf(stdout, "%s", buf);
-                fflush(stdout);
+                cmd = handle_up_key(buf, buf_max_len);
             } else if (ch == 66) { /* down key */
-                len = strlen(buf);
-                memset(buf, 0, buf_max_len);
-                cmd = down_cmd_item();
-                if (cmd != NULL) {
-                    strcpy(buf, cmd);
-                } else {
-                    strcpy(buf, cur_cmd);
-                }
-                print_prompt();
-                fflush(stdout);
-                for (i = 0; i < len; i++) {
-                    printf(" ");
-                    fflush(stdout);
-                }
-                print_prompt();
-                fflush(stdout);
-                fprintf(stdout, "%s", buf);
-                fflush(stdout);
+                cmd = handle_down_key(buf, cur_cmd, buf_max_len);
             }
             break;
 
         case 127: /* delete key */
-            len = strlen(buf);
-            if (len == 0) {
-                break;
-            }
-            buf[len-1] = '\0';
-            len--;
-            print_prompt();
-            for (i = 0; i < len + 1; i++) {
-                printf(" ");
-            }
-            print_prompt();
-            fprintf(stdout, "%s", buf);
+            handle_delete_key(buf, buf_max_len);
             break;
 
         case 10: /* enter key */
