@@ -1,4 +1,4 @@
-minish: minish.o util.o key-handler.o history-cmd.o signal-handler.o
+minish: minish.o util.o key-handler.o history-cmd.o signal-handler.o environment.o
 
 minish.o: minish.c
 	gcc -g -c minish.c
@@ -14,6 +14,9 @@ history-cmd.o: history-cmd.c history-cmd.h
 
 signal-handler.o: signal-handler.c signal-handler.h
 	gcc -g -c signal-handler.c
+
+environment.o: environment.c environment.h
+	gcc -g -c environment.c
 
 .PHONY: clean
 clean:

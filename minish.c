@@ -12,6 +12,7 @@
 #include "key-handler.h"
 #include "history-cmd.h"
 #include "signal-handler.h"
+#include "environment.h"
 
 #define MAX_ARGS 100
 
@@ -46,7 +47,7 @@ static void split_args(char *arg, char *parg[])
 
 /*
  * @cmd_str[in]
- * @cmd[out]: cmd string
+ * @pcmd[out]: cmd string
  * @arg[out]: arg string
  * */
 static void pre_handle_cmd_str(char *cmd_str, char **pcmd, char *parg[])
@@ -202,6 +203,7 @@ static int exec_cmd(char *cmd_str)
 
     pre_handle_cmd_str(cmd_str, &cmd, arg);
     handle_cmd_return_value(arg, cmd_ret);
+    handle_environment_variable(arg);
 
     if (cmd == NULL) {
         return 0;
@@ -209,6 +211,12 @@ static int exec_cmd(char *cmd_str)
 
     if (!strcmp(cmd, "cd")) {
         handle_cd_cmd(cmd, arg);
+    } else if (is_add_environment_variable(cmd)) {
+        ret = add_environment_variable(cmd);
+        if (ret) {
+            fprintf(stderr, "minish: add environment variable error\n");
+            return ret;
+        }
     } else {
         fork_and_exec_cmd(cmd, arg);
     }
