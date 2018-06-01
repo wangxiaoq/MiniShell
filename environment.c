@@ -35,7 +35,11 @@ int handle_environment_variable(char *arg[])
 
     while (tmp) {
         if (strchr(tmp, '$') == tmp) {
-            arg[i] = getenv(tmp+1);
+            tmp++;
+            if (*tmp == '\0') { /* skip the '$' */
+                continue;
+            }
+            arg[i] = getenv(tmp);
         }
         i++;
         tmp = arg[i];
