@@ -47,7 +47,7 @@ static int load_history_cmd_file(void)
     int ret = 0;
     FILE *fp = fopen(history_file_full_path, "r");
     if (fp == NULL) {
-        return -1;
+        return 0;
     }
 
     while (fgets(cmd_str, CMDLINE_MAXLENGTH, fp) != NULL) {
