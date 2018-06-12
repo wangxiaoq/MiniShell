@@ -63,6 +63,16 @@ char *handle_down_key(char *buf, char *cur_cmd, int buf_max_len)
     return cmd;
 }
 
+/* handle left arrow key */
+void handle_left_key(char *buf, int buf_max_len)
+{
+    if (strlen(buf)) {
+        printf("\033[1D");
+        buf[strlen(buf) -1] = 0;
+    }
+    fflush(stdout);
+}
+
 /* handle delete key */
 void handle_delete_key(char *buf, int buf_max_len)
 {
@@ -122,6 +132,10 @@ int myread(char *buf, int buf_max_len)
                 cmd = handle_up_key(buf, buf_max_len);
             } else if (ch == 66) { /* down key */
                 cmd = handle_down_key(buf, cur_cmd, buf_max_len);
+            } else if (ch == 68) {
+                handle_left_key(buf, buf_max_len);
+            //    printf("\033[1D");
+            //    fflush(stdout);
             }
             break;
 
@@ -143,6 +157,8 @@ int myread(char *buf, int buf_max_len)
             flag = 0;
             ret = 0;
             memset(buf, 0, buf_max_len);
+            break;
+        case 9: /* tab key */
             break;
 
         default:
