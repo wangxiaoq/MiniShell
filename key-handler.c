@@ -8,6 +8,23 @@
 #include "history-cmd.h"
 #include "util.h"
 
+static void flush_screen_after_input(char *buf, int *current_cursor)
+{
+    int len = strlen(buf);
+    int i = 0;
+
+    print_prompt();
+    for (i = 0; i < len + 1; i++) {
+        printf(" ");
+    }
+    print_prompt();
+    fprintf(stdout, "%s", buf);
+    /* adjust the cursor */
+    for (i = 0; i < len - (*current_cursor); i++) {
+        printf("\033[1D");
+    }
+}
+
 /* handle up arrow key */
 static char *handle_up_key(char *buf, int buf_max_len)
 {
@@ -64,17 +81,17 @@ char *handle_down_key(char *buf, char *cur_cmd, int buf_max_len)
 }
 
 /* handle left arrow key */
-void handle_left_key(char *buf, int buf_max_len)
+void handle_left_key(char *buf, int buf_max_len, int *current_cursor)
 {
-    if (strlen(buf)) {
+    if (*current_cursor > 0) {
         printf("\033[1D");
-        buf[strlen(buf) -1] = 0;
+        (*current_cursor)--;
     }
     fflush(stdout);
 }
 
 /* handle delete key */
-void handle_delete_key(char *buf, int buf_max_len)
+void handle_delete_key(char *buf, int buf_max_len, int *current_cursor)
 {
     int len = 0;
     int i = 0;
@@ -83,14 +100,18 @@ void handle_delete_key(char *buf, int buf_max_len)
     if (len == 0) {
         return ;
     }
-    buf[len-1] = '\0';
-    len--;
-    print_prompt();
-    for (i = 0; i < len + 1; i++) {
-        printf(" ");
+
+    if (*current_cursor != len) {
+        for (i = *current_cursor; i < len; i++) {
+            buf[i] = buf[i+1];
+        }
+    } else {
+        buf[len-1] = '\0';
     }
-    print_prompt();
-    fprintf(stdout, "%s", buf);
+    (*current_cursor)--;
+    len--;
+
+    flush_screen_after_input(buf, current_cursor);
 
     return ;
 }
@@ -110,6 +131,8 @@ int myread(char *buf, int buf_max_len)
     int flag = 1;
     int ret = 0;
     char cur_cmd[buf_max_len];
+    /* current position in buf */
+    int current_cursor = 0;
 
     memset(cur_cmd, 0, buf_max_len);
     memset(buf, 0, buf_max_len);
@@ -133,19 +156,20 @@ int myread(char *buf, int buf_max_len)
             } else if (ch == 66) { /* down key */
                 cmd = handle_down_key(buf, cur_cmd, buf_max_len);
             } else if (ch == 68) {
-                handle_left_key(buf, buf_max_len);
+                handle_left_key(buf, buf_max_len, &current_cursor);
             //    printf("\033[1D");
             //    fflush(stdout);
             }
             break;
 
         case 127: /* delete key */
-            handle_delete_key(buf, buf_max_len);
+            handle_delete_key(buf, buf_max_len, &current_cursor);
             break;
 
         case 10: /* enter key */
             flag = 0;
             ret = strlen(buf);
+            current_cursor = 0;
             break;
 
         case 4: /* CTRL+D */
@@ -165,9 +189,31 @@ int myread(char *buf, int buf_max_len)
             len = strlen(buf);
             fprintf(stdout, "%c", ch);
           //  fprintf(stdout, "%d", (int8_t)ch);
-            buf[len] = ch;
+            if (current_cursor != len) {
+                for (i = len; i >= current_cursor; i--) {
+                    buf[i+1] = buf[i];
+                }
+                buf[current_cursor] = ch;
+            } else {
+                buf[len] = ch;
+            }
             len++;
+            current_cursor++;
             strcpy(cur_cmd, buf);
+            flush_screen_after_input(buf, &current_cursor);
+#if 0
+    print_prompt();
+    for (i = 0; i < len + 1; i++) {
+        printf(" ");
+    }
+    print_prompt();
+    fprintf(stdout, "%s", buf);
+    /* adjust the cursor */
+    for (i = 0; i < len - current_cursor; i++) {
+        printf("\033[1D");
+    }
+#endif
+
             break;
         } /* end switch */
     } /* end while */
