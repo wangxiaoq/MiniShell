@@ -52,7 +52,7 @@ static char *handle_up_key(char *buf, int buf_max_len)
 }
 
 /* handle down arrow key */
-char *handle_down_key(char *buf, char *cur_cmd, int buf_max_len)
+static char *handle_down_key(char *buf, char *cur_cmd, int buf_max_len)
 {
     int len = 0;
     char *cmd = NULL;
@@ -81,7 +81,7 @@ char *handle_down_key(char *buf, char *cur_cmd, int buf_max_len)
 }
 
 /* handle left arrow key */
-void handle_left_key(char *buf, int buf_max_len, int *current_cursor)
+static void handle_left_key(char *buf, int buf_max_len, int *current_cursor)
 {
     if (*current_cursor > 0) {
         printf("\033[1D");
@@ -90,8 +90,18 @@ void handle_left_key(char *buf, int buf_max_len, int *current_cursor)
     fflush(stdout);
 }
 
+/* handle right arrow key */
+static void handle_right_key(char *buf, int buf_max_len, int *current_cursor)
+{
+    if (*current_cursor < strlen(buf)) {
+        printf("\033[1C");
+        (*current_cursor)++;
+    }
+    fflush(stdout);
+}
+
 /* handle delete key */
-void handle_delete_key(char *buf, int buf_max_len, int *current_cursor)
+static void handle_delete_key(char *buf, int buf_max_len, int *current_cursor)
 {
     int len = 0;
     int i = 0;
@@ -157,8 +167,8 @@ int myread(char *buf, int buf_max_len)
                 cmd = handle_down_key(buf, cur_cmd, buf_max_len);
             } else if (ch == 68) {
                 handle_left_key(buf, buf_max_len, &current_cursor);
-            //    printf("\033[1D");
-            //    fflush(stdout);
+            } else if (ch == 67) {
+                handle_right_key(buf, buf_max_len, &current_cursor);
             }
             break;
 
