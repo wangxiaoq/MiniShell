@@ -115,8 +115,12 @@ static void handle_delete_key(char *buf, int buf_max_len, int *current_cursor)
         return ;
     }
 
+    if (*current_cursor == 0) {
+        return ;
+    }
+
     if (*current_cursor != len) {
-        for (i = *current_cursor; i < len; i++) {
+        for (i = (*current_cursor) - 1; i < len; i++) {
             buf[i] = buf[i+1];
         }
     } else {
