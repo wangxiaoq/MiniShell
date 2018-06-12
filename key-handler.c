@@ -26,7 +26,7 @@ static void flush_screen_after_input(char *buf, int *current_cursor)
 }
 
 /* handle up arrow key */
-static char *handle_up_key(char *buf, int buf_max_len)
+static char *handle_up_key(char *buf, int buf_max_len, int *current_cursor)
 {
     int len = 0;
     char *cmd = NULL;
@@ -48,11 +48,13 @@ static char *handle_up_key(char *buf, int buf_max_len)
     fprintf(stdout, "%s", buf);
     fflush(stdout);
 
+    *current_cursor = strlen(buf);
+
     return cmd;
 }
 
 /* handle down arrow key */
-static char *handle_down_key(char *buf, char *cur_cmd, int buf_max_len)
+static char *handle_down_key(char *buf, char *cur_cmd, int buf_max_len, int *current_cursor)
 {
     int len = 0;
     char *cmd = NULL;
@@ -76,6 +78,8 @@ static char *handle_down_key(char *buf, char *cur_cmd, int buf_max_len)
     fflush(stdout);
     fprintf(stdout, "%s", buf);
     fflush(stdout);
+
+    *current_cursor = strlen(buf);
 
     return cmd;
 }
@@ -162,9 +166,9 @@ int myread(char *buf, int buf_max_len)
             ch = getchar();
             /* up key */
             if (ch == 65) {
-                cmd = handle_up_key(buf, buf_max_len);
+                cmd = handle_up_key(buf, buf_max_len, &current_cursor);
             } else if (ch == 66) { /* down key */
-                cmd = handle_down_key(buf, cur_cmd, buf_max_len);
+                cmd = handle_down_key(buf, cur_cmd, buf_max_len, &current_cursor);
             } else if (ch == 68) {
                 handle_left_key(buf, buf_max_len, &current_cursor);
             } else if (ch == 67) {
@@ -211,19 +215,6 @@ int myread(char *buf, int buf_max_len)
             current_cursor++;
             strcpy(cur_cmd, buf);
             flush_screen_after_input(buf, &current_cursor);
-#if 0
-    print_prompt();
-    for (i = 0; i < len + 1; i++) {
-        printf(" ");
-    }
-    print_prompt();
-    fprintf(stdout, "%s", buf);
-    /* adjust the cursor */
-    for (i = 0; i < len - current_cursor; i++) {
-        printf("\033[1D");
-    }
-#endif
-
             break;
         } /* end switch */
     } /* end while */
