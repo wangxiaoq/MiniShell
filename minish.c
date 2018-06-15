@@ -142,6 +142,24 @@ static int get_cmd_absolute_path(char *cmd, char *absolute_path)
     return -1;
 }
 
+static void ls_color_support(char *arg[])
+{
+    char *ls_cmd = "ls";
+    char *color = "--color";
+    int i = 0;
+
+    if (!strcmp(arg[0], "ls")) {
+        for (i = 0; i < MAX_ARGS; i++) {
+            if (arg[i] == NULL) {
+                arg[i] = color;
+                return ;
+            }
+        }
+    } else {
+        return ;
+    }
+}
+
 static void fork_and_exec_cmd(char *cmd, char *arg[])
 {
     pid_t pid = -1;
@@ -170,6 +188,8 @@ static void fork_and_exec_cmd(char *cmd, char *arg[])
             arg0 = absolute_path;
         }
         arg[0] = arg0;
+
+        ls_color_support(arg);
 
         ret = execv(absolute_path, arg);
         if (ret < 0) {
