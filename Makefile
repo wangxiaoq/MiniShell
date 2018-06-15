@@ -1,22 +1,31 @@
-minish: minish.o util.o key-handler.o history-cmd.o signal-handler.o environment.o
+minish: minish.o util.o key-handler.o history-cmd.o signal-handler.o environment.o complete.o print.o
+
+COMFLAGS = -g -c
+CC = gcc
 
 minish.o: minish.c
-	gcc -g -c minish.c
+	$(CC) $(COMFLAGS) $<
 
 util.o: util.c util.h
-	gcc -g -c util.c
+	$(CC) $(COMFLAGS) $<
 
 key-handler.o: key-handler.c key-handler.h
-	gcc -g -c key-handler.c
+	$(CC) $(COMFLAGS) $<
 
 history-cmd.o: history-cmd.c history-cmd.h
-	gcc -g -c history-cmd.c
+	$(CC) $(COMFLAGS) $<
 
 signal-handler.o: signal-handler.c signal-handler.h
-	gcc -g -c signal-handler.c
+	$(CC) $(COMFLAGS) $<
 
 environment.o: environment.c environment.h
-	gcc -g -c environment.c
+	$(CC) $(COMFLAGS) $<
+
+complete.o: complete.c complete.h
+	$(CC) $(COMFLAGS) $<
+
+print.o: print.c print.h
+	$(CC) $(COMFLAGS) $<
 
 .PHONY: clean
 clean:

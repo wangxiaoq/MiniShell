@@ -7,6 +7,7 @@
 #include <inttypes.h>
 #include "history-cmd.h"
 #include "util.h"
+#include "complete.h"
 
 static void flush_screen_after_input(char *buf, int *current_cursor)
 {
@@ -134,6 +135,37 @@ static void handle_delete_key(char *buf, int buf_max_len, int *current_cursor)
     return ;
 }
 
+/* tab key to complete */
+static void handle_tab_key(char *buf, int *current_cursor)
+{
+    int num = 0;
+    char *to_complete_buf = NULL;
+    int is_arg = 0;
+
+    if (strlen(buf) == 0) {
+        return ;
+    }
+
+    to_complete_buf = strrchr(buf, ' ');
+    if (to_complete_buf == NULL) {
+        to_complete_buf = buf;
+    } else {
+        to_complete_buf++;
+        is_arg = 1;
+    }
+
+    if (is_arg == 0 && is_sys_executable_cmd(to_complete_buf)) {
+        num = complete_executable_cmd(to_complete_buf);
+    } else {
+        num = complete_cmd_with_path(to_complete_buf);
+    }
+
+    if (num == 1) {
+        *current_cursor = strlen(buf);
+    }
+    flush_screen_after_input(buf, current_cursor);
+}
+
 /*
  * myread: handle all keys from keyboard input.
  *
@@ -151,6 +183,7 @@ int myread(char *buf, int buf_max_len)
     char cur_cmd[buf_max_len];
     /* current position in buf */
     int current_cursor = 0;
+    int tab_hit_times = 0;
 
     memset(cur_cmd, 0, buf_max_len);
     memset(buf, 0, buf_max_len);
@@ -178,35 +211,46 @@ int myread(char *buf, int buf_max_len)
             } else if (ch == 67) {
                 handle_right_key(buf, buf_max_len, &current_cursor);
             }
+            tab_hit_times = 0;
             break;
 
         case 127: /* delete key */
             handle_delete_key(buf, buf_max_len, &current_cursor);
+            tab_hit_times = 0;
             break;
 
         case 10: /* enter key */
             flag = 0;
             ret = strlen(buf);
             current_cursor = 0;
+            tab_hit_times = 0;
             break;
 
         case 4: /* CTRL+D */
             flag = 0;
             ret = -1;
+            tab_hit_times = 0;
             break;
 
         case -1: /* CTRL+C && CTRL+\ */
             flag = 0;
             ret = 0;
             memset(buf, 0, buf_max_len);
+            tab_hit_times = 0;
             break;
         case 9: /* tab key */
+            tab_hit_times++;
+            if (tab_hit_times >= 2) {
+                handle_tab_key(buf, &current_cursor);
+                if (strlen(buf) == 0) {
+                    tab_hit_times = 0;
+                }
+            }
             break;
 
         default:
             len = strlen(buf);
             fprintf(stdout, "%c", ch);
-          //  fprintf(stdout, "%d", (int8_t)ch);
             if (current_cursor != len) {
                 for (i = len; i >= current_cursor; i--) {
                     buf[i+1] = buf[i];
@@ -219,6 +263,7 @@ int myread(char *buf, int buf_max_len)
             current_cursor++;
             strcpy(cur_cmd, buf);
             flush_screen_after_input(buf, &current_cursor);
+            tab_hit_times = 0;
             break;
         } /* end switch */
     } /* end while */
