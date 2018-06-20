@@ -155,9 +155,9 @@ static void handle_tab_key(char *buf, int *current_cursor)
     }
 
     if (is_arg == 0 && is_sys_executable_cmd(to_complete_buf)) {
-        num = complete_executable_cmd(to_complete_buf);
+        num = complete_sys_cmd(to_complete_buf);
     } else {
-        num = complete_cmd_with_path(to_complete_buf);
+        num = complete_cmd_with_path(to_complete_buf, is_arg);
     }
 
     if (num == 1) {

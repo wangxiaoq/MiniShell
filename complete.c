@@ -3,6 +3,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <unistd.h>
 
 #include "util.h"
 #include "print.h"
@@ -50,7 +51,7 @@ static int search_candidate_cmd(char *buf, char *dir_name, int index)
  * just handle commands without path.
  * return value: the number of candidate commands.
  */
-int complete_executable_cmd(char *buf)
+int complete_sys_cmd(char *buf)
 {
     char path[CMDLINE_MAXLENGTH] = {0};
     char *p, *tmp = path;
@@ -74,7 +75,30 @@ int complete_executable_cmd(char *buf)
     return candidate_num;
 }
 
-int complete_cmd_with_path(char *buf)
+static void handle_cmd_under_current_dir(int *candidate_num)
+{
+    int i = 0, j = 0;
+    int orig_num = *candidate_num;
+    for (i = 0; i < orig_num; i++) {
+        if (access(candidate_cmds[i], X_OK) < 0) {
+            memset(candidate_cmds[i], 0, NAMELEN);
+            (*candidate_num)--;
+        }
+    }
+
+    for (i = 0; i < orig_num; i++) {
+        if (strlen(candidate_cmds[i]) == 0) {
+            for (j = i+1; j < orig_num; j++) {
+                if (strlen(candidate_cmds[j])) {
+                    strcpy(candidate_cmds[i], candidate_cmds[j]);
+                    memset(candidate_cmds[j], 0, NAMELEN);
+                }
+            }
+        }
+    }
+}
+
+int complete_cmd_with_path(char *buf, int is_arg)
 {
     int candidate_num = 0;
     char dir[NAMELEN] = {0};
@@ -87,6 +111,12 @@ int complete_cmd_with_path(char *buf)
     } else {
         p = buf;
         candidate_num = search_candidate_cmd(p, "./", candidate_num);
+    }
+
+    if (!strcmp("./", dir)) {
+        if (!is_arg) {
+            handle_cmd_under_current_dir(&candidate_num);
+        }
     }
 
     if (candidate_num == 0) {
