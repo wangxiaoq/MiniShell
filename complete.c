@@ -47,6 +47,34 @@ static int search_candidate_cmd(char *buf, char *dir_name, int index)
     return index;
 }
 
+static int del_repeated_cmds(int candidate_num)
+{
+    int i = 0, j = 0, orig_num = candidate_num;
+
+    for (i = 0; i < orig_num; i++) {
+        for (j = i + 1; j < orig_num; j++) {
+            if ((strlen(candidate_cmds[i]) != 0) && (!strcmp(candidate_cmds[i], candidate_cmds[j]))) {
+                memset(candidate_cmds[j], 0, NAMELEN);
+                candidate_num--;
+            }
+        }
+    }
+
+    for (i = 0; i < orig_num; i++) {
+        if (!strlen(candidate_cmds[i])) {
+            for (j = i + 1; j < orig_num; j++) {
+                if (strlen(candidate_cmds[j])) {
+                    strcpy(candidate_cmds[i], candidate_cmds[j]);
+                    memset(candidate_cmds[j], 0, NAMELEN);
+                    break;
+                }
+            }
+        }
+    }
+
+    return candidate_num;
+}
+
 static int has_common_substr(int candidate_num, char *substr)
 {
     int i = 0, j = 0, min_len = 0, len = 0;
@@ -92,6 +120,8 @@ int complete_sys_cmd(char *buf)
         candidate_num = search_candidate_cmd(buf, p, candidate_num);
         p = strsep(&tmp, ":");
     }
+
+    candidate_num = del_repeated_cmds(candidate_num);
 
     if (candidate_num == 0) {
         /* do nothing */
@@ -155,6 +185,8 @@ int complete_cmd_with_path(char *buf, int is_arg)
             handle_cmd_under_current_dir(&candidate_num);
         }
     }
+
+    candidate_num = del_repeated_cmds(candidate_num);
 
     if (candidate_num == 0) {
         /* nothing */
