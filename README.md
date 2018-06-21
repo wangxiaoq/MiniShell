@@ -15,6 +15,6 @@ A mini shell implemented in C, just implement the basic functions for now and I 
 7. Commands run in background, eg: ./a.out &
 8. Shell interpreter
 9. ~~The return value of a command, $?~~
-10. TAB key to complete the commands
+10. ~~TAB key to complete the commands~~
 11. Wildcard character
-12. Color support
+12. ~~Color support~~
