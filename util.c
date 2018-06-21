@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #include "util.h"
 
@@ -43,3 +44,17 @@ void print_prompt(void)
     fprintf(stdout, "\r%s", prompt);
 }
 
+int is_dir(char *file)
+{
+    struct stat buf;
+
+    if (stat(file, &buf) < 0) {
+        return -1;
+    }
+
+    if (S_ISDIR(buf.st_mode)) {
+        return 1;
+    } else {
+        return 0;
+    }
+}

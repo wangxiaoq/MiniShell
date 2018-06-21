@@ -7,5 +7,6 @@
 char *get_current_user(void);
 char *get_user_home(void);
 void print_prompt(void);
+int is_dir(char *file);
 
 #endif

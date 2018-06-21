@@ -194,11 +194,13 @@ int complete_cmd_with_path(char *buf, int is_arg, int tab_hit_times)
         /* nothing */
     } else if (candidate_num == 1) {
         strcpy(p, candidate_cmds[0]);
-        strcat(buf, " ");
+        if (!is_dir(buf)) {
+            strcat(buf, " ");
+        }
     } else {
         has_substr = has_common_substr(candidate_num, substr);
-        if (has_substr && strcmp(buf, substr)) {
-            strcpy(buf, substr);
+        if (has_substr && strcmp(p, substr)) {
+            strcpy(p, substr);
         } else {
             if (tab_hit_times > 1) {
                 print_list(candidate_cmds, candidate_num);
