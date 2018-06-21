@@ -68,6 +68,7 @@ int complete_sys_cmd(char *buf)
         /* do nothing */
     } else if (candidate_num == 1) { /* direct complete the command */
         strcpy(buf, candidate_cmds[0]);
+        strcat(buf, " ");
     } else {
         print_list(candidate_cmds, candidate_num);
     }
@@ -123,6 +124,7 @@ int complete_cmd_with_path(char *buf, int is_arg)
         /* nothing */
     } else if (candidate_num == 1) {
         strcpy(p, candidate_cmds[0]);
+        strcat(buf, " ");
     } else {
         print_list(candidate_cmds, candidate_num);
     }
