@@ -169,17 +169,17 @@ static void fork_and_exec_cmd(char *cmd, char *arg[])
 
     ret = get_cmd_absolute_path(cmd, absolute_path);
     if (ret < 0) {
-        fprintf(stderr, "minish: %s: command not found, get_cmd_absolute_path error\n", cmd);
+        fprintf(stderr, "%s: command not found\n", cmd);
         cmd_return_value = -127;
         return;
     }
 
     if ((pid = fork()) < 0) {
-        fprintf(stderr, "minish: %s: command not found, fork error\n", cmd);
+        fprintf(stderr, "minish: %s: fork error, errno: %d\n", cmd, errno);
     } else if (pid > 0) {
         ret = waitpid(pid, &cmd_return_value, 0);
         if (ret < 0) {
-            fprintf(stderr, "minish: %s: command not found, waitpid error\n", cmd);
+            fprintf(stderr, "minish: %s: waitpid error, errno: %d\n", cmd, errno);
         }
     } else {
         if ((arg0 = strrchr(absolute_path, '/')) != NULL) {
@@ -193,7 +193,7 @@ static void fork_and_exec_cmd(char *cmd, char *arg[])
 
         ret = execv(absolute_path, arg);
         if (ret < 0) {
-            fprintf(stderr, "minish: %s: command not found, exec error, errno: %d\n", cmd, errno);
+            fprintf(stderr, "minish: %s: exec error, errno: %d\n", cmd, errno);
         }
         exit(0);
     }
