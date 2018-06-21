@@ -240,12 +240,10 @@ int myread(char *buf, int buf_max_len)
             break;
         case 9: /* tab key */
             tab_hit_times++;
-//            if (tab_hit_times >= 2) {
-                handle_tab_key(buf, &current_cursor, tab_hit_times);
-                if (strlen(buf) == 0) {
-                    tab_hit_times = 0;
-                }
-//            }
+            handle_tab_key(buf, &current_cursor, tab_hit_times);
+            if (strlen(buf) == 0) {
+                tab_hit_times = 0;
+            }
             break;
 
         default:
