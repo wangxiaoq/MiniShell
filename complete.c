@@ -47,15 +47,44 @@ static int search_candidate_cmd(char *buf, char *dir_name, int index)
     return index;
 }
 
+static int has_common_substr(int candidate_num, char *substr)
+{
+    int i = 0, j = 0, min_len = 0, len = 0;
+    if (candidate_num == 0 || candidate_num == 1) {
+        return 0;
+    }
+
+    for (i = 0; i < candidate_num; i++) {
+        len = strlen(candidate_cmds[i]);
+        if (min_len == 0 || min_len > len) {
+            min_len = len;
+        }
+    }
+
+    for (i = 0; i < min_len; i++) {
+        for (j = 1; j < candidate_num; j++) {
+            if (candidate_cmds[j][i] != candidate_cmds[0][i]) {
+                goto out;
+            }
+        }
+        substr[i] = candidate_cmds[0][i];
+    }
+
+out:
+    return (i == 0) ? 0 : 1;
+}
+
 /*
  * just handle commands without path.
- * return value: the number of candidate commands.
+ * return value: whether complete the commands or not.
  */
 int complete_sys_cmd(char *buf)
 {
     char path[CMDLINE_MAXLENGTH] = {0};
+    char substr[CMDLINE_MAXLENGTH] = {0};
     char *p, *tmp = path;
     int candidate_num = 0;
+    int has_substr = 0;
 
     strcpy(path, getenv("PATH"));
     p = strsep(&tmp, ":");
@@ -70,10 +99,15 @@ int complete_sys_cmd(char *buf)
         strcpy(buf, candidate_cmds[0]);
         strcat(buf, " ");
     } else {
-        print_list(candidate_cmds, candidate_num);
+        has_substr = has_common_substr(candidate_num, substr);
+        if (has_substr && strcmp(buf, substr)) {
+            strcpy(buf, substr);
+        } else {
+            print_list(candidate_cmds, candidate_num);
+        }
     }
 
-    return candidate_num;
+    return (candidate_num == 1 || has_substr) ? 1 : 0;
 }
 
 static void handle_cmd_under_current_dir(int *candidate_num)
@@ -103,6 +137,7 @@ int complete_cmd_with_path(char *buf, int is_arg)
 {
     int candidate_num = 0;
     char dir[NAMELEN] = {0};
+    char substr[CMDLINE_MAXLENGTH] = {0};
     char *p = strrchr(buf, '/');
 
     if (p) {
@@ -126,7 +161,11 @@ int complete_cmd_with_path(char *buf, int is_arg)
         strcpy(p, candidate_cmds[0]);
         strcat(buf, " ");
     } else {
-        print_list(candidate_cmds, candidate_num);
+        if (has_common_substr(candidate_num, substr) && strcmp(buf, substr)) {
+            strcpy(buf, substr);
+        } else {
+            print_list(candidate_cmds, candidate_num);
+        }
     }
 
     return candidate_num;

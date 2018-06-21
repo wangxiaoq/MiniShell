@@ -138,7 +138,7 @@ static void handle_delete_key(char *buf, int buf_max_len, int *current_cursor)
 /* tab key to complete */
 static void handle_tab_key(char *buf, int *current_cursor)
 {
-    int num = 0;
+    int is_complete = 0;
     char *to_complete_buf = NULL;
     int is_arg = 0;
 
@@ -155,12 +155,12 @@ static void handle_tab_key(char *buf, int *current_cursor)
     }
 
     if (is_arg == 0 && is_sys_executable_cmd(to_complete_buf)) {
-        num = complete_sys_cmd(to_complete_buf);
+        is_complete = complete_sys_cmd(to_complete_buf);
     } else {
-        num = complete_cmd_with_path(to_complete_buf, is_arg);
+        is_complete = complete_cmd_with_path(to_complete_buf, is_arg);
     }
 
-    if (num == 1) {
+    if (is_complete) {
         *current_cursor = strlen(buf);
     }
     flush_screen_after_input(buf, current_cursor);
