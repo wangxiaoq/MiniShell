@@ -139,6 +139,7 @@ int complete_cmd_with_path(char *buf, int is_arg)
     char dir[NAMELEN] = {0};
     char substr[CMDLINE_MAXLENGTH] = {0};
     char *p = strrchr(buf, '/');
+    int has_substr = 0;
 
     if (p) {
         strncpy(dir, buf, p - buf + 1); /* include the '/' */
@@ -161,12 +162,13 @@ int complete_cmd_with_path(char *buf, int is_arg)
         strcpy(p, candidate_cmds[0]);
         strcat(buf, " ");
     } else {
-        if (has_common_substr(candidate_num, substr) && strcmp(buf, substr)) {
+        has_substr = has_common_substr(candidate_num, substr);
+        if (has_substr && strcmp(buf, substr)) {
             strcpy(buf, substr);
         } else {
             print_list(candidate_cmds, candidate_num);
         }
     }
 
-    return candidate_num;
+    return (candidate_num == 1 || has_substr) ? 1 : 0;
 }
