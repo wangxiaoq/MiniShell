@@ -136,7 +136,7 @@ static void handle_delete_key(char *buf, int buf_max_len, int *current_cursor)
 }
 
 /* tab key to complete */
-static void handle_tab_key(char *buf, int *current_cursor)
+static void handle_tab_key(char *buf, int *current_cursor, int tab_hit_times)
 {
     int is_complete = 0;
     char *to_complete_buf = NULL;
@@ -155,9 +155,9 @@ static void handle_tab_key(char *buf, int *current_cursor)
     }
 
     if (is_arg == 0 && is_sys_executable_cmd(to_complete_buf)) {
-        is_complete = complete_sys_cmd(to_complete_buf);
+        is_complete = complete_sys_cmd(to_complete_buf, tab_hit_times);
     } else {
-        is_complete = complete_cmd_with_path(to_complete_buf, is_arg);
+        is_complete = complete_cmd_with_path(to_complete_buf, is_arg, tab_hit_times);
     }
 
     if (is_complete) {
@@ -240,12 +240,12 @@ int myread(char *buf, int buf_max_len)
             break;
         case 9: /* tab key */
             tab_hit_times++;
-            if (tab_hit_times >= 2) {
-                handle_tab_key(buf, &current_cursor);
+//            if (tab_hit_times >= 2) {
+                handle_tab_key(buf, &current_cursor, tab_hit_times);
                 if (strlen(buf) == 0) {
                     tab_hit_times = 0;
                 }
-            }
+//            }
             break;
 
         default:

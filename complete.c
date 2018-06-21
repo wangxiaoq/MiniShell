@@ -106,7 +106,7 @@ out:
  * just handle commands without path.
  * return value: whether complete the commands or not.
  */
-int complete_sys_cmd(char *buf)
+int complete_sys_cmd(char *buf, int tab_hit_times)
 {
     char path[CMDLINE_MAXLENGTH] = {0};
     char substr[CMDLINE_MAXLENGTH] = {0};
@@ -133,7 +133,9 @@ int complete_sys_cmd(char *buf)
         if (has_substr && strcmp(buf, substr)) {
             strcpy(buf, substr);
         } else {
-            print_list(candidate_cmds, candidate_num);
+            if (tab_hit_times > 1) {
+                print_list(candidate_cmds, candidate_num);
+            }
         }
     }
 
@@ -163,7 +165,7 @@ static void handle_cmd_under_current_dir(int *candidate_num)
     }
 }
 
-int complete_cmd_with_path(char *buf, int is_arg)
+int complete_cmd_with_path(char *buf, int is_arg, int tab_hit_times)
 {
     int candidate_num = 0;
     char dir[NAMELEN] = {0};
@@ -198,7 +200,9 @@ int complete_cmd_with_path(char *buf, int is_arg)
         if (has_substr && strcmp(buf, substr)) {
             strcpy(buf, substr);
         } else {
-            print_list(candidate_cmds, candidate_num);
+            if (tab_hit_times > 1) {
+                print_list(candidate_cmds, candidate_num);
+            }
         }
     }
 
