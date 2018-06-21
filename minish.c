@@ -166,6 +166,8 @@ static void fork_and_exec_cmd(char *cmd, char *arg[])
     int ret = 0;
     char *arg0 = NULL;
     char absolute_path[NAMELEN] = {0};
+    sigset_t set, oset;
+    ret = sigfillset(&set);
 
     ret = get_cmd_absolute_path(cmd, absolute_path);
     if (ret < 0) {
@@ -177,14 +179,17 @@ static void fork_and_exec_cmd(char *cmd, char *arg[])
     if ((pid = fork()) < 0) {
         fprintf(stderr, "minish: %s: fork error, errno: %d\n", cmd, errno);
     } else if (pid > 0) {
-wait_child:
+        ret = sigprocmask(SIG_BLOCK, &set, &oset);
+        if (ret < 0) {
+            return ;
+        }
         ret = waitpid(pid, &cmd_return_value, 0);
         if (ret < 0) {
-            if (errno == EINTR) {
-                goto wait_child;
-            } else {
-                fprintf(stderr, "minish: %s: waitpid error, errno: %d\n", cmd, errno);
-            }
+            fprintf(stderr, "minish: %s: waitpid error, errno: %d\n", cmd, errno);
+        }
+        ret = sigprocmask(SIG_SETMASK, &oset, NULL);
+        if (ret < 0) {
+            return ;
         }
     } else {
         if ((arg0 = strrchr(absolute_path, '/')) != NULL) {
@@ -265,7 +270,9 @@ static int start_minish(void)
 
 int main(int argc, char *argv[])
 {
-    int ret = init_signal_handler();
+    int ret = 0;
+
+    ret = init_signal_handler();
     if (ret < 0) {
         return -1;
     }
