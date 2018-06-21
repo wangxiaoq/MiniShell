@@ -177,9 +177,14 @@ static void fork_and_exec_cmd(char *cmd, char *arg[])
     if ((pid = fork()) < 0) {
         fprintf(stderr, "minish: %s: fork error, errno: %d\n", cmd, errno);
     } else if (pid > 0) {
+wait_child:
         ret = waitpid(pid, &cmd_return_value, 0);
         if (ret < 0) {
-            fprintf(stderr, "minish: %s: waitpid error, errno: %d\n", cmd, errno);
+            if (errno == EINTR) {
+                goto wait_child;
+            } else {
+                fprintf(stderr, "minish: %s: waitpid error, errno: %d\n", cmd, errno);
+            }
         }
     } else {
         if ((arg0 = strrchr(absolute_path, '/')) != NULL) {
