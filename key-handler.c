@@ -141,17 +141,26 @@ static void handle_tab_key(char *buf, int *current_cursor, int tab_hit_times)
     int is_complete = 0;
     char *to_complete_buf = NULL;
     int is_arg = 0;
+    char *p = buf;
 
-    if (strlen(buf) == 0) {
+    while (*p == ' ') {
+        p++;
+    }
+
+    if (strlen(p) == 0) {
         return ;
     }
 
-    to_complete_buf = strrchr(buf, ' ');
+    to_complete_buf = strrchr(p, ' ');
     if (to_complete_buf == NULL) {
-        to_complete_buf = buf;
+        to_complete_buf = p;
     } else {
         to_complete_buf++;
-        is_arg = 1;
+        if (is_sudo_cmd(p)) {
+            is_arg = 0;
+        } else {
+            is_arg = 1;
+        }
     }
 
     if (is_arg == 0 && is_sys_executable_cmd(to_complete_buf)) {

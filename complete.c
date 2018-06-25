@@ -20,6 +20,33 @@ int is_sys_executable_cmd(char *buf)
     return 0;
 }
 
+int is_sudo_cmd(char *buf)
+{
+    int i = 0, space_num = 0;
+    int length = strlen(buf);
+    char *p = buf;
+
+    while (*p == ' ') {
+        p++;
+    }
+
+    if (strncmp(p, "sudo", strlen("sudo"))) {
+        return 0;
+    }
+
+    for (i = 0; i < length; i++) {
+        if (i > 0 && p[i] == ' ' && p[i-1] != ' ') {
+            space_num++;
+        }
+    }
+
+    if (space_num == 1) {
+        return 1;
+    }
+
+    return 0;
+}
+
 /* search candidate commands into `candidate_cmds` variable */
 static int search_candidate_cmd(char *buf, char *dir_name, int index)
 {
@@ -113,6 +140,10 @@ int complete_sys_cmd(char *buf, int tab_hit_times)
     char *p, *tmp = path;
     int candidate_num = 0;
     int has_substr = 0;
+
+    if (strlen(buf) == 0) {
+        return 0;
+    }
 
     strcpy(path, getenv("PATH"));
     p = strsep(&tmp, ":");
