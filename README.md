@@ -18,6 +18,6 @@ A mini shell implemented in C, just implement the basic functions for now and I 
 10. ~~TAB key to complete the commands~~
 11. Wildcard character
 12. ~~Color support~~
-13. OLDDIR support, eg: cd -
-14. completion after "sudo" support
+13. ~~OLDDIR support, eg: cd -~~
+14. ~~completion after "sudo" support~~
 15. current user home path should display "~", and "cd ~" should support
