@@ -87,16 +87,67 @@ static void pre_handle_cmd_str(char *cmd_str, char **pcmd, char *parg[])
      split_args(arg, parg);
 }
 
+static int set_old_dir(char *p)
+{
+    int ret = 0;
+    char *pret = NULL;
+    char cur_dir[CMDLINE_MAXLENGTH] = {0};
+    char buf[CMDLINE_MAXLENGTH] = {0};
+
+    pret = getcwd(cur_dir, CMDLINE_MAXLENGTH);
+    if (pret == NULL) {
+        return -1;
+    }
+    if (p == NULL) {
+        sprintf(buf, "OLDPWD=%s", cur_dir);
+    } else {
+        sprintf(buf, "OLDPWD=%s", p);
+    }
+    ret = add_environment_variable(buf);
+    if (ret < 0) {
+        return -1;
+    }
+}
+
 static void handle_cd_cmd(char *cmd, char *arg[])
 {
     int ret = 0;
+    char *old_dir = NULL;
+    char cur_dir[CMDLINE_MAXLENGTH] = {0};
 
     if (arg[1] == NULL) {
+        ret = set_old_dir(NULL);
+        if (ret < 0) {
+            fprintf(stderr, "minish: cd: set OLDPWD error\n");
+        }
+
         ret = chdir(get_user_home());
         if (ret < 0) {
             fprintf(stderr, "minish: cd: %s: No such file or directory\n", get_user_home());
         }
+    } else if (!strcmp(arg[1], "-")) {
+        if (getcwd(cur_dir, CMDLINE_MAXLENGTH) == NULL) {
+            fprintf(stderr, "minish: cd: get current directory error\n");
+        }
+        old_dir = getenv("OLDPWD");
+        if (old_dir == NULL) {
+            fprintf(stderr, "minish: cd: OLDPWD not set\n");
+        }
+        ret = chdir(old_dir);
+        if (ret < 0) {
+            fprintf(stderr, "minish: cd: %s: No such file or directory\n", old_dir);
+        }
+
+        ret = set_old_dir(cur_dir);
+        if (ret < 0) {
+            fprintf(stderr, "minish: cd: set OLDPWD error\n");
+        }
     } else {
+        ret = set_old_dir(NULL);
+        if (ret < 0) {
+            fprintf(stderr, "minish: cd: set OLDPWD error\n");
+        }
+
         ret = chdir(arg[1]);
         if (ret < 0) {
             fprintf(stderr, "minish: cd: %s: No such file or directory\n", arg[1]);
